@@ -15,7 +15,15 @@ router.post('/publishtweet', async function(req, res) {
   }
   
   await User.findOne({ username: req.body.username }).then(data => {
-    console.log(data)
+    const whatTimeIsIt = new Date();
+
+    const newTweet = new Tweet ({
+        username: data._id,
+        content: req.body.content,
+        date: whatTimeIsIt,
+        likes: 0
+    })
+    newTweet.save().then(res.json({result: true, tweet: newTweet}))
   });
 });
 module.exports = router;
