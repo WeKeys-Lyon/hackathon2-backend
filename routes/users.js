@@ -12,6 +12,34 @@ router.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 
+/*POST SignUp user */
+router.post('/signup', (req, res) => {
+  if (!checkBody(req.body, ['username', 'firstname', 'password'])) {
+    res.json({result: false, error: 'Missing or empty fields'})
+  }
+
+  // Vérifier si user existe déjà
+  User.findOne({username: req.body.username}).then(data => {
+    // si l'utilisateur n'existe pas, on va créer un nouvel utilisateur
+    if (data === null) {
+      const hash = bcrypt.hashSync(req.body.password, 10);
+
+      const newUser = new User ({
+        username: req.body.username,
+        firstname: req.body.firstname,
+        password: hash,
+        avatar: req.body.avatar,
+        token: uid2(32),
+      });
+      newUser.save().then(res.json({result: true, token: newUser.token}))
+  
+    } else {
+      // si l'utilisateur existe déjà
+      res.json({result: false, erreur: 'user already exists'});
+    }
+  });
+});
+
 /*POST SignIN user */
 router.post('/signin', async function(req, res) {
    if (!checkBody(req.body, ['username', 'password'])) {
