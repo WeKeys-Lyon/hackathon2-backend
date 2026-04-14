@@ -6,26 +6,7 @@ const User = require('../models/users');
 const Tweet = require('../models/tweets');
 const Trend = require('../models/trends');
 const { checkBody } = require('../modules/checkBody');
-
-function getTrendsFromTweet(string) {
-  const myRegex = new RegExp(/\#[\w\d\-\@\é\à\è\ù\ç\û\&]*/,'ig');
-  let myExtractedTrends = [];
-  [...string.matchAll(myRegex)].forEach((trend) => myExtractedTrends.push(trend[0]))
-  return myExtractedTrends;
-};
-
-function sendTrends(array) {
-  array.forEach(async (trend) => {
-    const isTrend = await Trend.findOne({hashtags: trend}).exec();
-    if (isTrend === null) {
-      const newTrend = new Trend ({
-        hashtags: trend,
-        count: 0
-      })
-      newTrend.save()
-    }
-  })
-}
+const { updateTrendsAndTweet, sendTrends, getTrendsFromTweet} = require('../modules/tweets_func');
 
 /*GET afficher tous les tweets */
 router.get('/', async (req, res) => {
@@ -45,20 +26,36 @@ router.post('/publishtweet', async function(req, res) {
     res.json({ result: false, error: 'Missing or empty fields' });
     return;
   }
-  
+  //On récupère l'utilisateur...
   await User.findOne({ username: req.body.username }).then(data => {
     const whatTimeIsIt = new Date();
-
+    //On envoie en traitement (inscription ou counter + 1) les mots dièses
+    const myTrends = getTrendsFromTweet(req.body.content)
+    sendTrends(myTrends);
+    //On crée le nouveau Tweet
     const newTweet = new Tweet ({
         username: data._id,
         content: req.body.content,
         date: whatTimeIsIt,
         likes: 0
     })
-    newTweet.save().then(res.json({result: true, tweet: newTweet}))
-
-    const myTrends = getTrendsFromTweet(newTweet.content)
-    sendTrends(myTrends);
+    newTweet.save().then(updateTrendsAndTweet(newTweet._id, myTrends))
+    .then(res.json({result: true, tweet: newTweet}))
   });
+});
+
+
+/* Mettre un coeur sur un Tweet */
+router.post('/ilikeit', async function(req, res) {
+   if (!checkBody(req.body, ['tweetId'])) {
+    res.json({ result: false, error: 'Missing or empty fields' });
+    return;
+  }
+
+  const myTweet = await Tweet.findOne({_id: req.body.tweetId}).exec();
+
+  await Tweet.updateOne({_id: req.body.tweetId}, {likes: myTweet.likes+1}).then(res.status(200).send({result: true, tweet: myTweet}));
+
+   
 });
 module.exports = router;
