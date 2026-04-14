@@ -3,9 +3,29 @@ var router = express.Router();
 
 require('../models/connection');
 const User = require('../models/users');
-const Tweet = require('../models/tweets')
+const Tweet = require('../models/tweets');
+const Trend = require('../models/trends');
 const { checkBody } = require('../modules/checkBody');
 
+function getTrendsFromTweet(string) {
+  const myRegex = new RegExp(/\#[\w\d\-\@\é\à\è\ù\ç\û\&]*/,'ig');
+  let myExtractedTrends = [];
+  [...string.matchAll(myRegex)].forEach((trend) => myExtractedTrends.push(trend[0]))
+  return myExtractedTrends;
+};
+
+function sendTrends(array) {
+  array.forEach(async (trend) => {
+    const isTrend = await Trend.findOne({hashtags: trend}).exec();
+    if (isTrend === null) {
+      const newTrend = new Trend ({
+        hashtags: trend,
+        count: 0
+      })
+      newTrend.save()
+    }
+  })
+}
 
 /*GET afficher tous les tweets */
 router.get('/', async (req, res) => {
@@ -36,6 +56,9 @@ router.post('/publishtweet', async function(req, res) {
         likes: 0
     })
     newTweet.save().then(res.json({result: true, tweet: newTweet}))
+
+    const myTrends = getTrendsFromTweet(newTweet.content)
+    sendTrends(myTrends);
   });
 });
 module.exports = router;
