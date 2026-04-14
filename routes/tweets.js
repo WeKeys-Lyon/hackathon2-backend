@@ -20,6 +20,21 @@ router.get('/', async (req, res) => {
   res.status(200).send({result: true, tweets});
 });
 
+
+/*DELETE supprimer les tweets */
+router.delete("/:id", (req, res) => {
+  Tweet.deleteOne().then(deletedDoc => {
+    if (deletedDoc.deletedCount > 0) {
+      // document successfully deleted
+      Tweet.find().then(data => {
+        res.json({ result: true, tweet: data });
+      });
+    } else {
+      res.json({ result: false, error: "Aucun tweet" });
+    }
+  });
+});
+
 /*POST myTweet */
 router.post('/publishtweet', async function(req, res) {
    if (!checkBody(req.body, ['username', 'content', 'date'])) {
