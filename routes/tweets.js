@@ -8,10 +8,37 @@ const Trend = require('../models/trends');
 const { checkBody } = require('../modules/checkBody');
 
 function getTrendsFromTweet(string) {
-  const myRegex = new RegExp('/\s(\#[\w\d\-\@\é\à\è\ù\ç\û\&]*)\s/','ig')
+  const myRegex = new RegExp(/\#[\w\d\-\@\é\à\è\ù\ç\û\&]*/,'ig');
   let myExtractedTrends = [];
-  myExtractedTrends = string.match(myRegex);
+  [...string.matchAll(myRegex)].forEach((trend) => myExtractedTrends.push(trend[0]))
+  return myExtractedTrends;
+};
+
+function sendTrends(array) {
+  array.forEach(async (trend) => {
+    const isTrend = await Trend.findOne({hashtags: trend}).exec();
+    if (isTrend === null) {
+      const newTrend = new Trend ({
+        hashtags: trend,
+        count: 0
+      })
+      newTrend.save()
+    }
+  })
 }
+
+/*GET afficher tous les tweets */
+router.get('/', async (req, res) => {
+  const tweets = await Tweet.find().populate('username', 'username -_id').sort({date: -1});
+
+  if (!tweets.length) {
+    res.json({result: false, error: 'aucun tweet à afficher'});
+    return;
+  }
+
+  res.json({result: true, tweets});
+});
+
 /*POST myTweet */
 router.post('/publishtweet', async function(req, res) {
    if (!checkBody(req.body, ['username', 'content', 'date'])) {
@@ -29,6 +56,9 @@ router.post('/publishtweet', async function(req, res) {
         likes: 0
     })
     newTweet.save().then(res.json({result: true, tweet: newTweet}))
+
+    const myTrends = getTrendsFromTweet(newTweet.content)
+    sendTrends(myTrends);
   });
 });
 module.exports = router;
