@@ -47,14 +47,25 @@ router.post('/publishtweet', async function(req, res) {
 
 /* Mettre un coeur sur un Tweet */
 router.post('/ilikeit', async function(req, res) {
-   if (!checkBody(req.body, ['tweetId'])) {
+   if (!checkBody(req.body, ['tweetId', 'token'])) {
     res.status(200).send({ result: false, error: 'Missing or empty fields' });
     return;
   }
+  //On créé une variable qui contiendra les données du Tweet
+  const thisTweet = await Tweet.findOne({_id: req.body.tweetId}).exec();
+  // On créé une variable qui regarde si le tweet se trouve dans la liste de like de l'utilisateur
+  const isInMyList = await User.findOne({token: req.body.token, likes: {$in: thisTweet._id}}).exec();
 
-  const myTweet = await Tweet.findOne({_id: req.body.tweetId}).exec();
-
-  await Tweet.updateOne({_id: req.body.tweetId}, {likes: myTweet.likes+1}).then(res.status(200).send({result: true, tweet: myTweet}));
+  if (isInMyList === null) {
+    //Si la réponse est non, alors on ajoute le tweet dans la liste de like de l'utilisateur...
+    await User.updateOne({token: req.body.token},{$push: {likes: thisTweet._id}}).then()
+    //...Et on incrémente de 1 le nombre de likes du dit Tweet
+    await Tweet.updateOne({_id: thisTweet._id}, {likes: thisTweet.likes+1}).then(res.status(200).send({result: true, tweet: thisTweet}));
+  } else {
+    //Si la réponse est oui, alors on fait l'inverse.
+    await User.updateOne({token: req.body.token},{$pull: {likes: thisTweet._id}}).then()
+    await Tweet.updateOne({_id: thisTweet._id}, {likes: thisTweet.likes-1}).then(res.status(200).send({result: true, tweet: thisTweet}));
+  }
 
    
 });
