@@ -7,10 +7,6 @@ const { checkBody } = require('../modules/checkBody');
 const uid2 = require('uid2');
 const bcrypt = require('bcrypt');
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
 
 /*POST SignUp user */
 router.post('/signup', (req, res) => {
@@ -46,8 +42,9 @@ router.post('/signin', async function(req, res) {
     res.json({ result: false, error: 'Missing or empty fields' });
     return;
   }
-
+  //On recherche si l'utilisateur existe
   await User.findOne({ username: req.body.username }).then(data => {
+    //Si l'utilisateur existe on compare son password renseigné
     if (data && bcrypt.compareSync(req.body.password, data.password)) {
       res.json({ result: true, token: data.token });
     } else {

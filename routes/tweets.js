@@ -13,17 +13,17 @@ router.get('/', async (req, res) => {
   const tweets = await Tweet.find().populate('username', 'username -_id').sort({date: -1});
 
   if (!tweets.length) {
-    res.json({result: false, error: 'aucun tweet à afficher'});
+    res.status(200).send({result: false, error: 'aucun tweet à afficher'});
     return;
   }
 
-  res.json({result: true, tweets});
+  res.status(200).send({result: true, tweets});
 });
 
 /*POST myTweet */
 router.post('/publishtweet', async function(req, res) {
    if (!checkBody(req.body, ['username', 'content', 'date'])) {
-    res.json({ result: false, error: 'Missing or empty fields' });
+    res.status(200).send({ result: false, error: 'Missing or empty fields' });
     return;
   }
   //On récupère l'utilisateur...
@@ -40,7 +40,7 @@ router.post('/publishtweet', async function(req, res) {
         likes: 0
     })
     newTweet.save().then(updateTrendsAndTweet(newTweet._id, myTrends))
-    .then(res.json({result: true, tweet: newTweet}))
+    .then(res.status(200).send({result: true, tweet: newTweet}))
   });
 });
 
@@ -48,7 +48,7 @@ router.post('/publishtweet', async function(req, res) {
 /* Mettre un coeur sur un Tweet */
 router.post('/ilikeit', async function(req, res) {
    if (!checkBody(req.body, ['tweetId'])) {
-    res.json({ result: false, error: 'Missing or empty fields' });
+    res.status(200).send({ result: false, error: 'Missing or empty fields' });
     return;
   }
 
