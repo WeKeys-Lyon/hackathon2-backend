@@ -3,10 +3,15 @@ var router = express.Router();
 
 require('../models/connection');
 const User = require('../models/users');
-const Tweet = require('../models/tweets')
+const Tweet = require('../models/tweets');
+const Trend = require('../models/trends');
 const { checkBody } = require('../modules/checkBody');
 
-
+function getTrendsFromTweet(string) {
+  const myRegex = new RegExp('/\s(\#[\w\d\-\@\é\à\è\ù\ç\û\&]*)\s/','ig')
+  let myExtractedTrends = [];
+  myExtractedTrends = string.match(myRegex);
+}
 /*POST myTweet */
 router.post('/publishtweet', async function(req, res) {
    if (!checkBody(req.body, ['username', 'content', 'date'])) {
