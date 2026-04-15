@@ -22,12 +22,15 @@ router.get('/', async (req, res) => {
 
 /*POST myTweet */
 router.post('/publishtweet', async function(req, res) {
-   if (!checkBody(req.body, ['username', 'content', 'date'])) {
+   if (!checkBody(req.body, ['token', 'content'])) {
     res.status(200).send({ result: false, error: 'Missing or empty fields' });
     return;
   }
   //On récupère l'utilisateur...
-  await User.findOne({ username: req.body.username }).then(data => {
+  await User.findOne({ token: req.body.token }).then(async data => {
+    if (data == null) {
+      return res.status(200).send({result: false, error: 'Le token n\'est pas reconnu'})
+    }
     const whatTimeIsIt = new Date();
     //On envoie en traitement (inscription ou counter + 1) les mots dièses
     const myTrends = getTrendsFromTweet(req.body.content)
@@ -39,8 +42,9 @@ router.post('/publishtweet', async function(req, res) {
         date: whatTimeIsIt,
         likes: 0
     })
-    newTweet.save().then(updateTrendsAndTweet(newTweet._id, myTrends))
-    .then(res.status(200).send({result: true, tweet: newTweet}))
+    await newTweet.save();
+    await updateTrendsAndTweet(newTweet._id, myTrends);
+    res.status(200).send({result: true, tweet: newTweet})
   });
 });
 

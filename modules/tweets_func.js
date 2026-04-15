@@ -9,9 +9,9 @@ function getTrendsFromTweet(string) {
   return myExtractedTrends;
 };
 
-function sendTrends(array) {
+async function sendTrends(array) {
   //envoie sur la collection MongoDB trends les différents mots dièses contenus dans un tweet
-  array.forEach(async (trend) => {
+  await array.forEach(async (trend) => {
     const isTrend = await Trend.findOne({hashtags: trend}).exec();
     if (isTrend === null) { //Si la trend n'existe pas, on la créée
       const newTrend = new Trend ({
@@ -25,10 +25,12 @@ function sendTrends(array) {
   })
 }
 //Ajouter dans le tweet les IDs
-function updateTrendsAndTweet(numbertweet, arrayTrends) {
-  arrayTrends.forEach(async(trend) => {
-    const myTrendId = await Trend.findOne({hashtags: trend}).exec();
-    await Tweet.updateOne({_id: numbertweet}, {$push: {hashtags: myTrendId._id}}).then()
+async function updateTrendsAndTweet(numbertweet, arrayTrends) {
+
+  await arrayTrends.forEach(async(trend) => {
+    await Trend.findOne({hashtags: trend}).then(data => {
+     Tweet.updateOne({_id: numbertweet}, {$push: {hashtags: data._id}}).then()
+    });
   })
 }
 module.exports = { updateTrendsAndTweet, sendTrends, getTrendsFromTweet};
