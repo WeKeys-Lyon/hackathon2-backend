@@ -8,6 +8,23 @@ const Trend = require('../models/trends');
 const { checkBody } = require('../modules/checkBody');
 const { updateTrendsAndTweet, sendTrends, getTrendsFromTweet} = require('../modules/tweets_func');
 
+/*DELETE supprimer les tweets */
+router.delete("/:tokenuser/:idtweet", async (req, res) => {
+  await User.findOne({token: req.params.tokenuser}).then(
+    Tweet.deleteOne({_id: req.params.idtweet}).then(deletedDoc => {
+    if (deletedDoc.deletedCount > 0) {
+      // document successfully deleted
+      Tweet.find().then(data => {
+        res.json({ result: true, tweet: data });
+      });
+    } else {
+      res.json({ result: false, error: "Aucun tweet" });
+    }
+  }))
+  
+});
+
+
 /*GET afficher tous les tweets */
 router.get('/', async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
