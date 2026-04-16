@@ -25,5 +25,21 @@ if (!checkBody(req.params, ['trendid', 'start', 'stop'])) {
   return res.status(200).send({result: true, tweets: batch});
 })
 
-
+// Obtenir l'ID d'une Trend
+router.get('/getid/:trend', async (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    if (!checkBody(req.params, ['trend'])) {
+    res.status(200).send({ result: false, error: 'Missing or empty fields' });
+    return;
+  }
+  const regex = new RegExp(`${req.params.trend}`)
+  Trend.findOne({hashtags: {$regex: regex, $options: 'i'} })
+  .then(data => {
+    if (!data) {
+        res.status(200).send({result: false, error: 'Rien n\'a été trouvé'})
+    } else {
+        res.status(200).send({result: true, trend: {id: data._id, hashtags: data.hashtags}})
+    }
+    })
+})
 module.exports = router;
