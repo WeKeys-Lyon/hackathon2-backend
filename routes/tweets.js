@@ -10,6 +10,7 @@ const { updateTrendsAndTweet, sendTrends, getTrendsFromTweet} = require('../modu
 
 /*GET afficher tous les tweets */
 router.get('/', async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
   const tweets = await Tweet.find().populate('username', 'username -_id').sort({date: -1});
 
   if (!tweets.length) {
@@ -21,15 +22,17 @@ router.get('/', async (req, res) => {
 });
 /*Get Afficher un paquet de tweets dans une intervale */
 router.get('/batchtweets/:start/:stop', async (req, res)=>{
+  res.setHeader('Access-Control-Allow-Origin', '*');
   if (!req.params.start && !req.params.stop || !req.params.start || !req.params.stop) {
     return res.status(200).send({result: false, error: 'Il manque un ou plusieurs paramètres'})
   }
-  const batch = await Tweet.find().populate('username', 'username -_id').sort({date: -1}).skip(req.params.start).limit(req.params.stop);
+  const batch = await Tweet.find().populate({path: "username", model: User, select: {avatar: 1, firstname: 1, username: 1}}).sort({date: -1}).skip(req.params.start).limit(req.params.stop);
   return res.status(200).send({result: true, tweets: batch});
 })
 
 /*POST myTweet */
 router.post('/publishtweet', async function(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
    if (!checkBody(req.body, ['token', 'content'])) {
     res.status(200).send({ result: false, error: 'Missing or empty fields' });
     return;
@@ -51,14 +54,15 @@ router.post('/publishtweet', async function(req, res) {
         likes: 0
     })
     await newTweet.save();
-    await updateTrendsAndTweet(newTweet._id, myTrends);
-    res.status(200).send({result: true, tweet: newTweet})
+    await updateTrendsAndTweet(newTweet._id, myTrends).then(res.status(200).send({result: true, tweet: newTweet}));
+    
   });
 });
 
 
 /* Mettre un coeur sur un Tweet */
 router.post('/ilikeit', async function(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
    if (!checkBody(req.body, ['tweetId', 'token'])) {
     res.status(200).send({ result: false, error: 'Missing or empty fields' });
     return;
