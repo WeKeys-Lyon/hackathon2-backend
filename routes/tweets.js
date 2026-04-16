@@ -19,6 +19,14 @@ router.get('/', async (req, res) => {
 
   res.status(200).send({result: true, tweets});
 });
+/*Get Afficher un paquet de tweets dans une intervale */
+router.get('/batchtweets/:start/:stop', async (req, res)=>{
+  if (!req.params.start && !req.params.stop || !req.params.start || !req.params.stop) {
+    return res.status(200).send({result: false, error: 'Il manque un ou plusieurs paramètres'})
+  }
+  const batch = await Tweet.find().populate('username', 'username -_id').sort({date: -1}).skip(req.params.start).limit(req.params.stop);
+  return res.status(200).send({result: true, tweets: batch});
+})
 
 /*POST myTweet */
 router.post('/publishtweet', async function(req, res) {
