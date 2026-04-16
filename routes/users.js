@@ -10,6 +10,7 @@ const bcrypt = require('bcrypt');
 
 /*POST SignUp user */
 router.post('/signup', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
   if (!checkBody(req.body, ['username', 'firstname', 'password'])) {
     res.json({result: false, error: 'Missing or empty fields'})
   }
@@ -27,7 +28,7 @@ router.post('/signup', (req, res) => {
         avatar: req.body.avatar,
         token: uid2(32),
       });
-      newUser.save().then(res.json({result: true, token: newUser.token}))
+      newUser.save().then(res.json({result: true, token: newUser.token, avatar: newUser.avatar, firstname: newUser.firstname}))
   
     } else {
       // si l'utilisateur existe déjà
@@ -38,6 +39,7 @@ router.post('/signup', (req, res) => {
 
 /*POST SignIN user */
 router.post('/signin', async function(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
    if (!checkBody(req.body, ['username', 'password'])) {
     res.json({ result: false, error: 'Missing or empty fields' });
     return;
@@ -46,7 +48,7 @@ router.post('/signin', async function(req, res) {
   await User.findOne({ username: req.body.username }).then(data => {
     //Si l'utilisateur existe on compare son password renseigné
     if (data && bcrypt.compareSync(req.body.password, data.password)) {
-      res.json({ result: true, token: data.token });
+      res.json({ result: true, token: data.token, avatar: data.avatar, firstname: data.firstname });
     } else {
       res.json({ result: false, error: 'User not found or wrong password' });
     }
