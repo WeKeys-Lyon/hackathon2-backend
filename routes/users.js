@@ -48,7 +48,8 @@ router.post('/signin', async function(req, res) {
   await User.findOne({ username: req.body.username }).then(data => {
     //Si l'utilisateur existe on compare son password renseigné
     if (data && bcrypt.compareSync(req.body.password, data.password)) {
-      res.json({ result: true, token: data.token, avatar: data.avatar, firstname: data.firstname });
+      console.log(data)
+      res.json({ result: true, token: data.token, avatar: data.avatar, firstname: data.firstname, id: data._id });
     } else {
       res.json({ result: false, error: 'User not found or wrong password' });
     }

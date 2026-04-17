@@ -15,7 +15,7 @@ router.delete("/:tokenuser/:idtweet", async (req, res) => {
     if (deletedDoc.deletedCount > 0) {
       // document successfully deleted
       Tweet.find().then(data => {
-        res.json({ result: true, tweet: data });
+        res.json({ result: true});
       });
     } else {
       res.json({ result: false, error: "Aucun tweet" });
