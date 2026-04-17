@@ -93,11 +93,11 @@ router.post('/ilikeit', async function(req, res) {
     //Si la réponse est non, alors on ajoute le tweet dans la liste de like de l'utilisateur...
     await User.updateOne({token: req.body.token},{$push: {likes: thisTweet._id}}).then()
     //...Et on incrémente de 1 le nombre de likes du dit Tweet
-    await Tweet.updateOne({_id: thisTweet._id}, {likes: thisTweet.likes+1}).then(res.status(200).send({result: true, tweet: thisTweet}));
+    await Tweet.updateOne({_id: thisTweet._id}, {likes: thisTweet.likes+1}).then(res.status(200).send({result: true, tweet: thisTweet, added: true}));
   } else {
     //Si la réponse est oui, alors on fait l'inverse.
     await User.updateOne({token: req.body.token},{$pull: {likes: thisTweet._id}}).then()
-    await Tweet.updateOne({_id: thisTweet._id}, {likes: thisTweet.likes-1}).then(res.status(200).send({result: true, tweet: thisTweet}));
+    await Tweet.updateOne({_id: thisTweet._id}, {likes: thisTweet.likes-1}).then(res.status(200).send({result: true, tweet: thisTweet, erased: true}));
   } 
 });
 module.exports = router;

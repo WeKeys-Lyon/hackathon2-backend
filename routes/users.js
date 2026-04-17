@@ -48,11 +48,31 @@ router.post('/signin', async function(req, res) {
   await User.findOne({ username: req.body.username }).then(data => {
     //Si l'utilisateur existe on compare son password renseigné
     if (data && bcrypt.compareSync(req.body.password, data.password)) {
-      console.log(data)
-      res.json({ result: true, token: data.token, avatar: data.avatar, firstname: data.firstname, id: data._id });
+      res.json({ result: true, token: data.token, avatar: data.avatar, firstname: data.firstname, id: data._id, likes: data.likes });
     } else {
       res.json({ result: false, error: 'User not found or wrong password' });
     }
   });
+});
+
+/*GET setLike */
+router.get('/likes/:token/:tweetid', async function(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+   if (!checkBody(req.params, ['token', 'tweetid'])) {
+    res.json({ result: false, error: 'Missing or empty fields' });
+    return;
+  }
+  var ObjectId = require('mongoose').Types.ObjectId; 
+
+  await User.findOne({token: req.params.token ,likes: new ObjectId(`${req.params.tweetid}`)}).then(data => {
+    if (data == null) {
+    User.updateOne({token: req.params.token}, {$push: {likes: req.params.tweetid}})
+    .then(data => res.status(200).send({result: true, added: true, user: data, error: 'je suis passé par null'}))
+     } else {
+    User.updateOne({token: req.params.token}, {$pull: {likes: req.params.tweetid}})
+    .then(data => res.status(200).send({result: true, erased: true, user: data}))
+    }
+  });
+  
 });
 module.exports = router;
